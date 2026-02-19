@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Closed - DSR Oggy</title>
+  <style>
+    body {
+      background: linear-gradient(135deg, #020617, #0f172a);
+      color: white;
+      font-family: Arial;
+      text-align: center;
+      padding-top: 120px;
+    }
+
+    .box {
+      background: #020617;
+      padding: 40px;
+      border-radius: 20px;
+      display: inline-block;
+      box-shadow: 0 0 40px rgba(255, 0, 0, 0.4);
+      max-width: 400px;
+    }
+
+    h1 {
+      font-size: 45px;
+      color: #ef4444;
+      animation: glow 1.5s infinite alternate;
+    }
+
+    @keyframes glow {
+      from { text-shadow: 0 0 10px #ef4444; }
+      to { text-shadow: 0 0 25px #ef4444; }
+    }
+
+    #timer {
+      font-size: 26px;
+      margin-top: 20px;
+    }
+
+    .msg {
+      margin-top: 15px;
+      font-size: 16px;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+
+    .btn {
+      display: block;
+      margin: 15px auto;
+      padding: 12px;
+      width: 100%;
+      border-radius: 10px;
+      text-decoration: none;
+      color: white;
+      background: #1e293b;
+      transition: 0.3s;
+      font-weight: bold;
+    }
+
+    .btn:hover {
+      background: #ef4444;
+      box-shadow: 0 0 15px #ef4444;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="box">
+    <h1>🔴 CLOSED</h1>
+
+    <div id="timer"></div>
+
+    <div class="msg">
+      DSR Media Server abhi closed downtime pe hai.<br>
+      To enjoy karen hamara kuch services 👇
+    </div>
+
+    <a class="btn" href="https://dsrtubebeta.vercel.app" target="_blank">
+      🎬 DSR Tube Beta
+    </a>
+
+    <a class="btn" href="https://dsr-oggy.vercel.app" target="_blank">
+      🚀 DSR Oggy Site
+    </a>
+  </div>
+
+<script>
+function updateTimer() {
+  const now = new Date();
+
+  const openTime = new Date();
+  openTime.setHours(10, 0, 0, 0);
+
+  if (now.getHours() >= 10) {
+    openTime.setDate(openTime.getDate() + 1);
+  }
+
+  const diff = Math.floor((openTime - now) / 1000);
+
+  let h = Math.floor(diff / 3600);
+  let m = Math.floor((diff % 3600) / 60);
+  let s = diff % 60;
+
+  document.getElementById("timer").innerText =
+    `⏳ Opens in: ${h}h ${m}m ${s}s`;
+}
+
+setInterval(updateTimer, 1000);
+updateTimer();
+</script>
+
+</body>
+</html>
