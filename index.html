@@ -103,7 +103,6 @@ font-size:8px;
 text-align:right;
 }
 
-/* INPUT FIX */
 .input{
 display:flex;
 padding:8px;
@@ -148,10 +147,6 @@ font-size:10px;
 height:calc(100vh - 60px);
 }
 
-.messages{
-flex:1;
-}
-
 .msg{
 max-width:90%;
 }
@@ -166,7 +161,7 @@ max-width:90%;
 <div class="box">
 <h3>DSR Chat</h3>
 <input id="name" placeholder="Enter username">
-<button id="enterBtn">Enter</button>
+<button onclick="start()">Enter</button>
 </div>
 </div>
 
@@ -176,7 +171,7 @@ max-width:90%;
 <div class="header">
 <span id="chatName">Select Chat</span>
 <span id="onlineCount"></span>
-<button id="logoutBtn">Logout</button>
+<button onclick="logout()">Logout</button>
 </div>
 
 <div style="padding:5px;background:#111;font-size:11px;">
@@ -189,7 +184,7 @@ max-width:90%;
 
 <div class="input">
 <input id="msg" placeholder="Type message">
-<button id="sendBtn">Send</button>
+<button onclick="send()">Send</button>
 </div>
 </div>
 
@@ -198,7 +193,7 @@ max-width:90%;
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
 getFirestore,collection,addDoc,onSnapshot,doc,setDoc,
-updateDoc,deleteDoc,query,orderBy,serverTimestamp
+query,orderBy,serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
@@ -217,31 +212,8 @@ let username=localStorage.getItem("user")||"";
 let userId=localStorage.getItem("id")||Date.now()+"";
 let currentChat="";
 
-/* LOAD */
-window.onload=()=>{
-
-const nameInput=document.getElementById("name");
-const msgInput=document.getElementById("msg");
-
-nameInput.addEventListener("keydown",e=>{
-if(e.key==="Enter") start();
-});
-
-msgInput.addEventListener("keydown",e=>{
-if(e.key==="Enter") send();
-});
-
-document.getElementById("enterBtn").onclick=start;
-document.getElementById("sendBtn").onclick=send;
-document.getElementById("logoutBtn").onclick=logout;
-
-if(username){
-login.style.display="none";
-init();
-}
-};
-
-function start(){
+/* GLOBAL FIX */
+window.start = function(){
 username=document.getElementById("name").value.trim();
 if(!username) return;
 
@@ -250,16 +222,53 @@ localStorage.setItem("id",userId);
 
 login.style.display="none";
 init();
-}
+};
 
+window.send = function(){
+const input=document.getElementById("msg");
+
+if(!input.value.trim() || !currentChat) return;
+
+addDoc(collection(db,"messages",currentChat,"msgs"),{
+sender:username,
+text:input.value.trim(),
+time:serverTimestamp()
+});
+
+input.value="";
+};
+
+window.logout = function(){
+localStorage.clear();
+location.reload();
+};
+
+/* ENTER FIX */
+window.onload=()=>{
+document.getElementById("name").addEventListener("keydown",e=>{
+if(e.key==="Enter") start();
+});
+
+document.getElementById("msg").addEventListener("keydown",e=>{
+if(e.key==="Enter") send();
+});
+
+if(username){
+login.style.display="none";
+init();
+}
+};
+
+/* INIT */
 async function init(){
 
 document.getElementById("myName").innerText=username;
 
 await setDoc(doc(db,"users",userId),{
-name:username,online:true,banned:false
+name:username,online:true
 });
 
+/* USERS */
 onSnapshot(collection(db,"users"),snap=>{
 let html="";
 let online=0;
@@ -277,11 +286,13 @@ users.innerHTML=html;
 onlineCount.innerText="Online: "+online;
 });
 
+/* NOTICE */
 onSnapshot(doc(db,"admin","notice"),d=>{
 notice.innerText=d.data()?.text||"";
 });
 }
 
+/* CHAT */
 function cid(a,b){return[a,b].sort().join("_")}
 
 window.openChat=(id,name)=>{
@@ -304,27 +315,6 @@ ${m.text||""}
 messages.innerHTML=html;
 });
 };
-
-/* ✅ FINAL SEND FIX */
-function send(){
-const input=document.getElementById("msg");
-
-if(!input.value.trim() || !currentChat) return;
-
-addDoc(collection(db,"messages",currentChat,"msgs"),{
-sender:username,
-text:input.value.trim(),
-time:serverTimestamp()
-});
-
-input.value="";
-}
-
-/* LOGOUT */
-function logout(){
-localStorage.clear();
-location.reload();
-}
 
 </script>
 
