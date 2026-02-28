@@ -31,9 +31,9 @@ z-index:10;
 background:#111;
 padding:20px;
 border-radius:10px;
-text-align:center;
 width:90%;
 max-width:260px;
+text-align:center;
 }
 
 input{
@@ -74,7 +74,6 @@ padding:8px;
 background:#111;
 display:flex;
 justify-content:space-between;
-align-items:center;
 font-size:12px;
 }
 
@@ -104,10 +103,12 @@ font-size:8px;
 text-align:right;
 }
 
+/* INPUT FIX */
 .input{
 display:flex;
-padding:6px;
+padding:8px;
 background:#111;
+gap:5px;
 }
 
 .input input{
@@ -115,10 +116,7 @@ flex:1;
 font-size:12px;
 }
 
-.input button{
-padding:5px 8px;
-}
-
+/* USERS */
 .user{
 padding:7px;
 border-bottom:1px solid #222;
@@ -126,38 +124,32 @@ cursor:pointer;
 font-size:12px;
 }
 
-/* 📱 MOBILE FIX (IMPORTANT) */
+/* MOBILE */
 @media(max-width:700px){
 
 body{
 flex-direction:column;
-height:100vh;
 }
 
-/* users top bar */
 .sidebar{
 width:100%;
 height:60px;
 display:flex;
 overflow-x:auto;
-overflow-y:hidden;
 }
 
-/* users */
 .user{
 min-width:80px;
 text-align:center;
 font-size:10px;
 }
 
-/* chat takes rest */
 .chat{
-flex:1;
-height:auto;
+height:calc(100vh - 60px);
 }
 
 .messages{
-height:calc(100vh - 140px);
+flex:1;
 }
 
 .msg{
@@ -172,7 +164,7 @@ max-width:90%;
 
 <div class="login" id="login">
 <div class="box">
-<h2 style="font-size:16px;">DSR Chat</h2>
+<h3>DSR Chat</h3>
 <input id="name" placeholder="Enter username">
 <button id="enterBtn">Enter</button>
 </div>
@@ -187,7 +179,7 @@ max-width:90%;
 <button id="logoutBtn">Logout</button>
 </div>
 
-<div style="padding:6px;background:#111;font-size:11px;">
+<div style="padding:5px;background:#111;font-size:11px;">
 👤 You: <b id="myName"></b>
 </div>
 
@@ -225,7 +217,9 @@ let username=localStorage.getItem("user")||"";
 let userId=localStorage.getItem("id")||Date.now()+"";
 let currentChat="";
 
+/* LOAD */
 window.onload=()=>{
+
 const nameInput=document.getElementById("name");
 const msgInput=document.getElementById("msg");
 
@@ -237,9 +231,9 @@ msgInput.addEventListener("keydown",e=>{
 if(e.key==="Enter") send();
 });
 
-enterBtn.onclick=start;
-sendBtn.onclick=send;
-logoutBtn.onclick=logout;
+document.getElementById("enterBtn").onclick=start;
+document.getElementById("sendBtn").onclick=send;
+document.getElementById("logoutBtn").onclick=logout;
 
 if(username){
 login.style.display="none";
@@ -264,13 +258,6 @@ document.getElementById("myName").innerText=username;
 
 await setDoc(doc(db,"users",userId),{
 name:username,online:true,banned:false
-});
-
-onSnapshot(doc(db,"users",userId),(d)=>{
-if(d.data()?.banned){
-alert("You are banned");
-logout();
-}
 });
 
 onSnapshot(collection(db,"users"),snap=>{
@@ -312,30 +299,28 @@ html+=`
 <div class="msg ${m.sender===username?"me":""}">
 ${m.text||""}
 <div class="time">${t||""}</div>
-${m.sender===username?`<button onclick="del('${docu.id}')">❌</button>`:""}
 </div>`;
 });
 messages.innerHTML=html;
 });
 };
 
+/* ✅ FINAL SEND FIX */
 function send(){
 const input=document.getElementById("msg");
-if(!input.value || !currentChat)return;
+
+if(!input.value.trim() || !currentChat) return;
 
 addDoc(collection(db,"messages",currentChat,"msgs"),{
 sender:username,
-text:input.value,
+text:input.value.trim(),
 time:serverTimestamp()
 });
 
 input.value="";
 }
 
-window.del=(id)=>{
-deleteDoc(doc(db,"messages",currentChat,"msgs",id));
-}
-
+/* LOGOUT */
 function logout(){
 localStorage.clear();
 location.reload();
