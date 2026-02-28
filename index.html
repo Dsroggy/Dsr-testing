@@ -115,7 +115,6 @@ flex:1;
 font-size:12px;
 }
 
-/* USERS */
 .user{
 padding:7px;
 border-bottom:1px solid #222;
@@ -125,32 +124,24 @@ font-size:12px;
 
 /* MOBILE */
 @media(max-width:700px){
-
-body{
-flex-direction:column;
-}
-
+body{flex-direction:column;}
 .sidebar{
 width:100%;
 height:60px;
 display:flex;
 overflow-x:auto;
 }
-
 .user{
 min-width:80px;
 text-align:center;
 font-size:10px;
 }
-
 .chat{
 height:calc(100vh - 60px);
 }
-
 .msg{
 max-width:90%;
 }
-
 }
 </style>
 </head>
@@ -161,7 +152,7 @@ max-width:90%;
 <div class="box">
 <h3>DSR Chat</h3>
 <input id="name" placeholder="Enter username">
-<button onclick="start()">Enter</button>
+<button id="enterBtn">Enter</button>
 </div>
 </div>
 
@@ -171,7 +162,7 @@ max-width:90%;
 <div class="header">
 <span id="chatName">Select Chat</span>
 <span id="onlineCount"></span>
-<button onclick="logout()">Logout</button>
+<button id="logoutBtn">Logout</button>
 </div>
 
 <div style="padding:5px;background:#111;font-size:11px;">
@@ -184,7 +175,7 @@ max-width:90%;
 
 <div class="input">
 <input id="msg" placeholder="Type message">
-<button onclick="send()">Send</button>
+<button id="sendBtn">Send</button>
 </div>
 </div>
 
@@ -212,8 +203,38 @@ let username=localStorage.getItem("user")||"";
 let userId=localStorage.getItem("id")||Date.now()+"";
 let currentChat="";
 
-/* GLOBAL FIX */
-window.start = function(){
+/* DOM READY */
+window.addEventListener("DOMContentLoaded",()=>{
+
+const nameInput=document.getElementById("name");
+const msgInput=document.getElementById("msg");
+const sendBtn=document.getElementById("sendBtn");
+const enterBtn=document.getElementById("enterBtn");
+const logoutBtn=document.getElementById("logoutBtn");
+
+/* EVENTS (MAIN FIX) */
+enterBtn.addEventListener("click",start);
+sendBtn.addEventListener("click",send);
+logoutBtn.addEventListener("click",logout);
+
+nameInput.addEventListener("keydown",e=>{
+if(e.key==="Enter") start();
+});
+
+msgInput.addEventListener("keydown",e=>{
+if(e.key==="Enter") send();
+});
+
+/* AUTO LOGIN */
+if(username){
+login.style.display="none";
+init();
+}
+
+});
+
+/* START */
+function start(){
 username=document.getElementById("name").value.trim();
 if(!username) return;
 
@@ -222,12 +243,16 @@ localStorage.setItem("id",userId);
 
 login.style.display="none";
 init();
-};
+}
 
-window.send = function(){
+/* SEND (FINAL FIXED) */
+function send(){
 const input=document.getElementById("msg");
 
-if(!input.value.trim() || !currentChat) return;
+if(!input.value.trim() || !currentChat){
+console.log("No chat selected or empty msg");
+return;
+}
 
 addDoc(collection(db,"messages",currentChat,"msgs"),{
 sender:username,
@@ -236,28 +261,13 @@ time:serverTimestamp()
 });
 
 input.value="";
-};
+}
 
-window.logout = function(){
+/* LOGOUT */
+function logout(){
 localStorage.clear();
 location.reload();
-};
-
-/* ENTER FIX */
-window.onload=()=>{
-document.getElementById("name").addEventListener("keydown",e=>{
-if(e.key==="Enter") start();
-});
-
-document.getElementById("msg").addEventListener("keydown",e=>{
-if(e.key==="Enter") send();
-});
-
-if(username){
-login.style.display="none";
-init();
 }
-};
 
 /* INIT */
 async function init(){
@@ -268,7 +278,6 @@ await setDoc(doc(db,"users",userId),{
 name:username,online:true
 });
 
-/* USERS */
 onSnapshot(collection(db,"users"),snap=>{
 let html="";
 let online=0;
@@ -286,10 +295,6 @@ users.innerHTML=html;
 onlineCount.innerText="Online: "+online;
 });
 
-/* NOTICE */
-onSnapshot(doc(db,"admin","notice"),d=>{
-notice.innerText=d.data()?.text||"";
-});
 }
 
 /* CHAT */
@@ -304,12 +309,10 @@ snap=>{
 let html="";
 snap.forEach(docu=>{
 let m=docu.data();
-let t=m.time?.toDate().toLocaleTimeString();
 
 html+=`
 <div class="msg ${m.sender===username?"me":""}">
-${m.text||""}
-<div class="time">${t||""}</div>
+${m.text}
 </div>`;
 });
 messages.innerHTML=html;
