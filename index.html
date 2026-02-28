@@ -1,112 +1,297 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Closed - DSR Oggy</title>
-  <style>
-    body {
-      background: linear-gradient(135deg, #020617, #0f172a);
-      color: white;
-      font-family: Arial;
-      text-align: center;
-      padding-top: 120px;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DSR Chat</title>
 
-    .box {
-      background: #020617;
-      padding: 40px;
-      border-radius: 20px;
-      display: inline-block;
-      box-shadow: 0 0 40px rgba(255, 0, 0, 0.4);
-      max-width: 400px;
-    }
-
-    h1 {
-      font-size: 45px;
-      color: #ef4444;
-      animation: glow 1.5s infinite alternate;
-    }
-
-    @keyframes glow {
-      from { text-shadow: 0 0 10px #ef4444; }
-      to { text-shadow: 0 0 25px #ef4444; }
-    }
-
-    #timer {
-      font-size: 26px;
-      margin-top: 20px;
-    }
-
-    .msg {
-      margin-top: 15px;
-      font-size: 16px;
-      color: #94a3b8;
-      line-height: 1.5;
-    }
-
-    .btn {
-      display: block;
-      margin: 15px auto;
-      padding: 12px;
-      width: 100%;
-      border-radius: 10px;
-      text-decoration: none;
-      color: white;
-      background: #1e293b;
-      transition: 0.3s;
-      font-weight: bold;
-    }
-
-    .btn:hover {
-      background: #ef4444;
-      box-shadow: 0 0 15px #ef4444;
-    }
-  </style>
-</head>
-<body>
-
-  <div class="box">
-    <h1>🔴 CLOSED</h1>
-
-    <div id="timer"></div>
-
-    <div class="msg">
-      DSR Media Server abhi closed downtime pe hai.<br>
-      To enjoy karen hamara kuch services 👇
-    </div>
-
-    <a class="btn" href="https://dsrtubebeta.vercel.app" target="_blank">
-      🎬 DSR Tube Beta
-    </a>
-
-    <a class="btn" href="https://dsr-oggy.vercel.app" target="_blank">
-      🚀 DSR Oggy Site
-    </a>
-  </div>
-
-<script>
-function updateTimer() {
-  const now = new Date();
-
-  const openTime = new Date();
-  openTime.setHours(10, 0, 0, 0);
-
-  if (now.getHours() >= 10) {
-    openTime.setDate(openTime.getDate() + 1);
-  }
-
-  const diff = Math.floor((openTime - now) / 1000);
-
-  let h = Math.floor(diff / 3600);
-  let m = Math.floor((diff % 3600) / 60);
-  let s = diff % 60;
-
-  document.getElementById("timer").innerText =
-    `⏳ Opens in: ${h}h ${m}m ${s}s`;
+<style>
+body{
+margin:0;
+font-family:sans-serif;
+background:#0d0d0d;
+color:white;
+display:flex;
+height:100vh;
 }
 
-setInterval(updateTimer, 1000);
-updateTimer();
+.login{
+position:fixed;
+width:100%;
+height:100%;
+display:flex;
+justify-content:center;
+align-items:center;
+background:#000;
+}
+
+.box{
+background:#111;
+padding:30px;
+border-radius:15px;
+text-align:center;
+width:90%;
+max-width:320px;
+}
+
+input{
+width:100%;
+padding:12px;
+margin:10px 0;
+border:none;
+border-radius:8px;
+}
+
+button{
+padding:10px;
+border:none;
+border-radius:8px;
+background:#00ffcc;
+cursor:pointer;
+}
+
+.sidebar{
+width:250px;
+background:#111;
+overflow:auto;
+}
+
+.user{
+padding:10px;
+border-bottom:1px solid #222;
+cursor:pointer;
+}
+
+.chat{
+flex:1;
+display:flex;
+flex-direction:column;
+}
+
+.header{
+padding:10px;
+background:#111;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+.messages{
+flex:1;
+overflow:auto;
+padding:10px;
+}
+
+.msg{
+background:#1f1f1f;
+padding:10px;
+border-radius:10px;
+margin:5px;
+max-width:70%;
+}
+
+.me{
+background:#00ffcc;
+color:black;
+margin-left:auto;
+}
+
+.time{
+font-size:10px;
+text-align:right;
+}
+
+.input{
+display:flex;
+padding:10px;
+background:#111;
+}
+
+.input input{
+flex:1;
+}
+
+/* MOBILE */
+@media(max-width:700px){
+.sidebar{width:100px;font-size:12px;}
+.msg{max-width:90%;}
+}
+</style>
+</head>
+
+<body>
+
+<div class="login" id="login">
+<div class="box">
+<h2>DSR Chat</h2>
+<input id="name" placeholder="Enter username">
+<button id="enterBtn">Enter</button>
+</div>
+</div>
+
+<div class="sidebar" id="users"></div>
+
+<div class="chat">
+<div class="header">
+<span id="chatName">Select Chat</span>
+<span id="onlineCount"></span>
+<button id="logoutBtn">Logout</button>
+</div>
+
+<div style="padding:10px;background:#111;">
+👤 You: <b id="myName"></b>
+</div>
+
+<div id="notice" style="text-align:center;color:#00ffcc;"></div>
+
+<div class="messages" id="messages"></div>
+
+<div class="input">
+<input id="msg" placeholder="Type message">
+<button id="sendBtn">Send</button>
+</div>
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+getFirestore,collection,addDoc,onSnapshot,doc,setDoc,
+updateDoc,deleteDoc,query,orderBy,serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig={
+apiKey:"AIzaSyBGIE6NhM9g3cRJm-GJS2lWEPZbH7zFLDA",
+authDomain:"dsr-chat4.firebaseapp.com",
+projectId:"dsr-chat4",
+storageBucket:"dsr-chat4.firebasestorage.app",
+messagingSenderId:"886435031733",
+appId:"1:886435031733:web:ca7359cc950fe35a76ecfc"
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+let username=localStorage.getItem("user")||"";
+let userId=localStorage.getItem("id")||Date.now()+"";
+let currentChat="";
+
+window.onload=()=>{
+const nameInput=document.getElementById("name");
+const msgInput=document.getElementById("msg");
+
+nameInput.addEventListener("keydown",e=>{
+if(e.key==="Enter") start();
+});
+
+msgInput.addEventListener("keydown",e=>{
+if(e.key==="Enter") send();
+});
+
+enterBtn.onclick=start;
+sendBtn.onclick=send;
+logoutBtn.onclick=logout;
+
+if(username){
+login.style.display="none";
+init();
+}
+};
+
+function start(){
+username=document.getElementById("name").value.trim();
+if(!username) return;
+
+localStorage.setItem("user",username);
+localStorage.setItem("id",userId);
+
+login.style.display="none";
+init();
+}
+
+async function init(){
+
+document.getElementById("myName").innerText=username;
+
+await setDoc(doc(db,"users",userId),{
+name:username,online:true,banned:false
+});
+
+onSnapshot(doc(db,"users",userId),(d)=>{
+if(d.data()?.banned){
+alert("You are banned");
+logout();
+}
+});
+
+onSnapshot(collection(db,"users"),snap=>{
+let html="";
+let online=0;
+
+snap.forEach(d=>{
+let u=d.data();
+if(u.online) online++;
+
+html+=`<div class="user" onclick="openChat('${d.id}','${u.name}')">
+${u.name} ${u.online?"🟢":""}
+</div>`;
+});
+
+users.innerHTML=html;
+document.getElementById("onlineCount").innerText="Online: "+online;
+});
+
+onSnapshot(doc(db,"admin","notice"),d=>{
+notice.innerText=d.data()?.text||"";
+});
+}
+
+function cid(a,b){return[a,b].sort().join("_")}
+
+window.openChat=(id,name)=>{
+currentChat=cid(userId,id);
+chatName.innerText=name;
+
+onSnapshot(query(collection(db,"messages",currentChat,"msgs"),orderBy("time")),
+snap=>{
+let html="";
+snap.forEach(docu=>{
+let m=docu.data();
+let t=m.time?.toDate().toLocaleTimeString();
+
+html+=`
+<div class="msg ${m.sender===username?"me":""}">
+${m.text||""}
+<div class="time">${t||""}</div>
+${m.sender===username?`<button onclick="del('${docu.id}')">❌</button>`:""}
+</div>`;
+});
+messages.innerHTML=html;
+});
+};
+
+function send(){
+const input=document.getElementById("msg");
+if(!input.value || !currentChat)return;
+
+addDoc(collection(db,"messages",currentChat,"msgs"),{
+sender:username,
+text:input.value,
+time:serverTimestamp()
+});
+
+input.value="";
+}
+
+window.del=(id)=>{
+deleteDoc(doc(db,"messages",currentChat,"msgs",id));
+}
+
+function logout(){
+localStorage.clear();
+location.reload();
+}
+
 </script>
 
 </body>

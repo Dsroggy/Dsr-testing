@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DSR Admin Dashboard</title>
+
+<style>
+body{
+background:#0d0d0d;
+color:white;
+font-family:sans-serif;
+margin:0;
+padding:20px;
+}
+
+input,button{
+width:100%;
+padding:10px;
+margin:6px 0;
+border:none;
+border-radius:6px;
+}
+
+button{
+background:#00ffcc;
+cursor:pointer;
+}
+
+.user{
+background:#111;
+padding:12px;
+margin:10px 0;
+border-radius:10px;
+}
+
+.online{color:#00ffcc}
+.offline{color:gray}
+</style>
+</head>
+
+<body>
+
+<h2>👑 Admin Login</h2>
+<input id="pass" placeholder="Enter Password">
+<button onclick="login()">Enter</button>
+
+<div id="panel" style="display:none">
+
+<h3 id="stats"></h3>
+
+<h3>📢 Send Notice</h3>
+<input id="notice" placeholder="Write notice">
+<button onclick="sendNotice()">Send</button>
+
+<h3>👥 Users</h3>
+<div id="users"></div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+getFirestore,collection,onSnapshot,doc,updateDoc,setDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* 🔴 FULL FIREBASE CONFIG (FIXED) */
+const firebaseConfig={
+apiKey:"AIzaSyBGIE6NhM9g3cRJm-GJS2lWEPZbH7zFLDA",
+authDomain:"dsr-chat4.firebaseapp.com",
+projectId:"dsr-chat4",
+storageBucket:"dsr-chat4.firebasestorage.app",
+messagingSenderId:"886435031733",
+appId:"1:886435031733:web:ca7359cc950fe35a76ecfc"
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+/* 🔐 PASSWORD */
+const PASSWORD="dsr123";
+
+/* LOGIN */
+window.login=()=>{
+if(pass.value===PASSWORD){
+panel.style.display="block";
+loadUsers();
+}else{
+alert("Wrong Password");
+}
+};
+
+/* LOAD USERS + STATS */
+function loadUsers(){
+onSnapshot(collection(db,"users"),snap=>{
+let html="";
+let total=0;
+let online=0;
+
+snap.forEach(d=>{
+let u=d.data();
+total++;
+if(u.online) online++;
+
+html+=`
+<div class="user">
+<b>${u.name}</b><br>
+
+<span class="${u.online?"online":"offline"}">
+${u.online?"🟢 Online":"⚫ Offline"}
+</span><br>
+
+Status: ${u.banned?"🚫 BANNED":"✅ Active"}<br>
+
+<button onclick="ban('${d.id}')">🚫 Ban</button>
+<button onclick="unban('${d.id}')">✅ Unban</button>
+</div>
+`;
+});
+
+users.innerHTML=html;
+stats.innerText=`Total Users: ${total} | Online: ${online}`;
+});
+}
+
+/* BAN */
+window.ban=async(id)=>{
+await updateDoc(doc(db,"users",id),{
+banned:true
+});
+};
+
+/* UNBAN */
+window.unban=async(id)=>{
+await updateDoc(doc(db,"users",id),{
+banned:false
+});
+};
+
+/* NOTICE */
+window.sendNotice=async()=>{
+if(!notice.value) return alert("Enter text");
+
+await setDoc(doc(db,"admin","notice"),{
+text:notice.value
+});
+
+alert("Notice Sent");
+};
+
+</script>
+
+</body>
+</html>
