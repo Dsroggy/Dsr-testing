@@ -30,42 +30,42 @@ background:#000;
 .box{
 background:#111;
 padding:20px;
-border-radius:12px;
+border-radius:10px;
 text-align:center;
 width:90%;
-max-width:280px;
+max-width:260px;
 }
 
 input{
 width:100%;
-padding:10px;
-margin:8px 0;
+padding:8px;
+margin:6px 0;
 border:none;
 border-radius:6px;
-font-size:14px;
+font-size:13px;
 }
 
 button{
-padding:8px;
+padding:7px;
 border:none;
 border-radius:6px;
 background:#00ffcc;
 cursor:pointer;
-font-size:13px;
+font-size:12px;
 }
 
 /* SIDEBAR */
 .sidebar{
-width:220px;
+width:200px;
 background:#111;
 overflow:auto;
 }
 
 .user{
-padding:8px;
+padding:7px;
 border-bottom:1px solid #222;
 cursor:pointer;
-font-size:13px;
+font-size:12px;
 }
 
 /* CHAT */
@@ -81,22 +81,22 @@ background:#111;
 display:flex;
 justify-content:space-between;
 align-items:center;
-font-size:13px;
+font-size:12px;
 }
 
 .messages{
 flex:1;
 overflow:auto;
-padding:8px;
+padding:6px;
 }
 
 .msg{
 background:#1f1f1f;
-padding:8px;
+padding:7px;
 border-radius:8px;
 margin:4px;
 max-width:65%;
-font-size:13px;
+font-size:12px;
 }
 
 .me{
@@ -106,7 +106,7 @@ margin-left:auto;
 }
 
 .time{
-font-size:9px;
+font-size:8px;
 text-align:right;
 }
 
@@ -118,35 +118,37 @@ background:#111;
 
 .input input{
 flex:1;
-font-size:13px;
+font-size:12px;
 }
 
 .input button{
-padding:6px 10px;
+padding:5px 8px;
 }
 
-/* MOBILE */
+/* 📱 MOBILE PERFECT */
 @media(max-width:700px){
 
 body{
 flex-direction:column;
 }
 
+/* horizontal users */
 .sidebar{
 width:100%;
-height:80px;
+height:70px;
 display:flex;
 overflow-x:auto;
 }
 
 .user{
-min-width:90px;
+min-width:80px;
 text-align:center;
-font-size:11px;
+font-size:10px;
 }
 
+/* chat full screen */
 .chat{
-height:calc(100vh - 80px);
+height:calc(100vh - 70px);
 }
 
 .msg{
@@ -154,7 +156,7 @@ max-width:90%;
 }
 
 .header{
-font-size:12px;
+font-size:11px;
 }
 
 }
@@ -165,7 +167,7 @@ font-size:12px;
 
 <div class="login" id="login">
 <div class="box">
-<h2>DSR Chat</h2>
+<h2 style="font-size:16px;">DSR Chat</h2>
 <input id="name" placeholder="Enter username">
 <button id="enterBtn">Enter</button>
 </div>
@@ -180,11 +182,11 @@ font-size:12px;
 <button id="logoutBtn">Logout</button>
 </div>
 
-<div style="padding:6px;background:#111;font-size:12px;">
+<div style="padding:6px;background:#111;font-size:11px;">
 👤 You: <b id="myName"></b>
 </div>
 
-<div id="notice" style="text-align:center;color:#00ffcc;font-size:12px;"></div>
+<div id="notice" style="text-align:center;color:#00ffcc;font-size:11px;"></div>
 
 <div class="messages" id="messages"></div>
 
