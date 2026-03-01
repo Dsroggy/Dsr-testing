@@ -184,7 +184,7 @@ max-width:90%;
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
 getFirestore,collection,addDoc,onSnapshot,doc,setDoc,
-query,orderBy,serverTimestamp
+updateDoc,deleteDoc,query,orderBy,serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
@@ -208,14 +208,10 @@ window.addEventListener("DOMContentLoaded",()=>{
 
 const nameInput=document.getElementById("name");
 const msgInput=document.getElementById("msg");
-const sendBtn=document.getElementById("sendBtn");
-const enterBtn=document.getElementById("enterBtn");
-const logoutBtn=document.getElementById("logoutBtn");
 
-/* EVENTS (MAIN FIX) */
-enterBtn.addEventListener("click",start);
-sendBtn.addEventListener("click",send);
-logoutBtn.addEventListener("click",logout);
+document.getElementById("enterBtn").addEventListener("click",start);
+document.getElementById("sendBtn").addEventListener("click",send);
+document.getElementById("logoutBtn").addEventListener("click",logout);
 
 nameInput.addEventListener("keydown",e=>{
 if(e.key==="Enter") start();
@@ -245,39 +241,23 @@ login.style.display="none";
 init();
 }
 
-/* SEND (FINAL FIXED) */
-function send(){
-const input=document.getElementById("msg");
-
-if(!input.value.trim() || !currentChat){
-console.log("No chat selected or empty msg");
-return;
-}
-
-addDoc(collection(db,"messages",currentChat,"msgs"),{
-sender:username,
-text:input.value.trim(),
-time:serverTimestamp()
-});
-
-input.value="";
-}
-
-/* LOGOUT */
-function logout(){
-localStorage.clear();
-location.reload();
-}
-
 /* INIT */
 async function init(){
 
 document.getElementById("myName").innerText=username;
 
 await setDoc(doc(db,"users",userId),{
-name:username,online:true
+name:username,
+online:true,
+banned:false
 });
 
+/* OFFLINE FIX */
+window.addEventListener("beforeunload",()=>{
+updateDoc(doc(db,"users",userId),{online:false});
+});
+
+/* USERS */
 onSnapshot(collection(db,"users"),snap=>{
 let html="";
 let online=0;
@@ -287,7 +267,7 @@ let u=d.data();
 if(u.online) online++;
 
 html+=`<div class="user" onclick="openChat('${d.id}','${u.name}')">
-${u.name} ${u.online?"🟢":""}
+${u.name} ${u.online?"🟢":"⚫"}
 </div>`;
 });
 
@@ -295,6 +275,10 @@ users.innerHTML=html;
 onlineCount.innerText="Online: "+online;
 });
 
+/* NOTICE */
+onSnapshot(doc(db,"admin","notice"),d=>{
+notice.innerText=d.data()?.text||"";
+});
 }
 
 /* CHAT */
@@ -309,15 +293,39 @@ snap=>{
 let html="";
 snap.forEach(docu=>{
 let m=docu.data();
+let t=m.time?.toDate().toLocaleTimeString();
 
 html+=`
 <div class="msg ${m.sender===username?"me":""}">
-${m.text}
+${m.text||""}
+<div class="time">${t||""}</div>
 </div>`;
 });
 messages.innerHTML=html;
 });
 };
+
+/* SEND FIXED */
+function send(){
+const input=document.getElementById("msg");
+
+if(!input.value.trim() || !currentChat) return;
+
+addDoc(collection(db,"messages",currentChat,"msgs"),{
+sender:username,
+text:input.value.trim(),
+time:serverTimestamp()
+});
+
+input.value="";
+}
+
+/* LOGOUT */
+function logout(){
+updateDoc(doc(db,"users",userId),{online:false});
+localStorage.clear();
+location.reload();
+}
 
 </script>
 
