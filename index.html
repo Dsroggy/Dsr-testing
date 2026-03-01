@@ -15,7 +15,6 @@ display:flex;
 height:100vh;
 }
 
-/* LOGIN */
 .login{
 position:fixed;
 width:100%;
@@ -54,14 +53,12 @@ cursor:pointer;
 font-size:12px;
 }
 
-/* SIDEBAR */
 .sidebar{
 width:200px;
 background:#111;
 overflow-y:auto;
 }
 
-/* CHAT */
 .chat{
 flex:1;
 display:flex;
@@ -75,6 +72,7 @@ background:#111;
 display:flex;
 justify-content:space-between;
 font-size:12px;
+gap:5px;
 }
 
 .messages{
@@ -122,7 +120,6 @@ cursor:pointer;
 font-size:12px;
 }
 
-/* MOBILE */
 @media(max-width:700px){
 body{flex-direction:column;}
 .sidebar{
@@ -162,14 +159,13 @@ max-width:90%;
 <div class="header">
 <span id="chatName">Select Chat</span>
 <span id="onlineCount"></span>
+<button id="clearBtn">Clear</button>
 <button id="logoutBtn">Logout</button>
 </div>
 
 <div style="padding:5px;background:#111;font-size:11px;">
 👤 You: <b id="myName"></b>
 </div>
-
-<div id="notice" style="text-align:center;color:#00ffcc;font-size:11px;"></div>
 
 <div class="messages" id="messages"></div>
 
@@ -184,7 +180,7 @@ max-width:90%;
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
 getFirestore,collection,addDoc,onSnapshot,doc,setDoc,
-updateDoc,deleteDoc,query,orderBy,serverTimestamp
+updateDoc,deleteDoc,query,orderBy,serverTimestamp,getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
@@ -200,33 +196,29 @@ const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
 let username=localStorage.getItem("user")||"";
-let userId=localStorage.getItem("id")||Date.now()+"";
+let userId=localStorage.getItem("id")||"";
 let currentChat="";
 
-/* DOM READY */
+/* DOM */
 window.addEventListener("DOMContentLoaded",()=>{
-
-const nameInput=document.getElementById("name");
-const msgInput=document.getElementById("msg");
 
 document.getElementById("enterBtn").addEventListener("click",start);
 document.getElementById("sendBtn").addEventListener("click",send);
 document.getElementById("logoutBtn").addEventListener("click",logout);
+document.getElementById("clearBtn").addEventListener("click",clearChat);
 
-nameInput.addEventListener("keydown",e=>{
+document.getElementById("name").addEventListener("keydown",e=>{
 if(e.key==="Enter") start();
 });
 
-msgInput.addEventListener("keydown",e=>{
+document.getElementById("msg").addEventListener("keydown",e=>{
 if(e.key==="Enter") send();
 });
 
-/* AUTO LOGIN */
 if(username){
 login.style.display="none";
 init();
 }
-
 });
 
 /* START */
@@ -234,6 +226,7 @@ function start(){
 username=document.getElementById("name").value.trim();
 if(!username) return;
 
+userId = username;
 localStorage.setItem("user",username);
 localStorage.setItem("id",userId);
 
@@ -248,11 +241,10 @@ document.getElementById("myName").innerText=username;
 
 await setDoc(doc(db,"users",userId),{
 name:username,
-online:true,
-banned:false
+online:true
 });
 
-/* OFFLINE FIX */
+/* OFFLINE */
 window.addEventListener("beforeunload",()=>{
 updateDoc(doc(db,"users",userId),{online:false});
 });
@@ -274,16 +266,12 @@ ${u.name} ${u.online?"🟢":"⚫"}
 users.innerHTML=html;
 onlineCount.innerText="Online: "+online;
 });
-
-/* NOTICE */
-onSnapshot(doc(db,"admin","notice"),d=>{
-notice.innerText=d.data()?.text||"";
-});
 }
 
-/* CHAT */
+/* CHAT ID */
 function cid(a,b){return[a,b].sort().join("_")}
 
+/* OPEN CHAT */
 window.openChat=(id,name)=>{
 currentChat=cid(userId,id);
 chatName.innerText=name;
@@ -297,7 +285,7 @@ let t=m.time?.toDate().toLocaleTimeString();
 
 html+=`
 <div class="msg ${m.sender===username?"me":""}">
-${m.text||""}
+${m.text}
 <div class="time">${t||""}</div>
 </div>`;
 });
@@ -305,7 +293,7 @@ messages.innerHTML=html;
 });
 };
 
-/* SEND FIXED */
+/* SEND */
 function send(){
 const input=document.getElementById("msg");
 
@@ -318,6 +306,21 @@ time:serverTimestamp()
 });
 
 input.value="";
+}
+
+/* CLEAR CHAT */
+async function clearChat(){
+
+if(!currentChat) return alert("Open chat first");
+
+if(!confirm("Clear full chat?")) return;
+
+const snap = await getDocs(collection(db,"messages",currentChat,"msgs"));
+
+snap.forEach(async (d)=>{
+await deleteDoc(doc(db,"messages",currentChat,"msgs",d.id));
+});
+
 }
 
 /* LOGOUT */

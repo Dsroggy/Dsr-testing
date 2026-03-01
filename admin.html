@@ -62,10 +62,10 @@ border-radius:10px;
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-getFirestore,collection,onSnapshot,doc,updateDoc,setDoc
+getFirestore,collection,onSnapshot,doc,updateDoc,setDoc,deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* 🔴 FULL FIREBASE CONFIG (FIXED) */
+/* FIREBASE CONFIG */
 const firebaseConfig={
 apiKey:"AIzaSyBGIE6NhM9g3cRJm-GJS2lWEPZbH7zFLDA",
 authDomain:"dsr-chat4.firebaseapp.com",
@@ -78,7 +78,6 @@ appId:"1:886435031733:web:ca7359cc950fe35a76ecfc"
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
-/* 🔐 PASSWORD */
 const PASSWORD="dsr123";
 
 /* LOGIN */
@@ -91,7 +90,7 @@ alert("Wrong Password");
 }
 };
 
-/* LOAD USERS + STATS */
+/* LOAD USERS */
 function loadUsers(){
 onSnapshot(collection(db,"users"),snap=>{
 let html="";
@@ -115,6 +114,7 @@ Status: ${u.banned?"🚫 BANNED":"✅ Active"}<br>
 
 <button onclick="ban('${d.id}')">🚫 Ban</button>
 <button onclick="unban('${d.id}')">✅ Unban</button>
+<button onclick="delUser('${d.id}')">🗑️ Delete</button>
 </div>
 `;
 });
@@ -125,17 +125,23 @@ stats.innerText=`Total Users: ${total} | Online: ${online}`;
 }
 
 /* BAN */
-window.ban=async(id)=>{
-await updateDoc(doc(db,"users",id),{
-banned:true
-});
+window.ban=id=>{
+updateDoc(doc(db,"users",id),{banned:true});
 };
 
 /* UNBAN */
-window.unban=async(id)=>{
-await updateDoc(doc(db,"users",id),{
-banned:false
-});
+window.unban=id=>{
+updateDoc(doc(db,"users",id),{banned:false});
+};
+
+/* 🔥 DELETE USER */
+window.delUser=async(id)=>{
+
+if(!confirm("Delete this user permanently?")) return;
+
+await deleteDoc(doc(db,"users",id));
+
+alert("User Deleted");
 };
 
 /* NOTICE */
